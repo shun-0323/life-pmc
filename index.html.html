@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life PMC — Quest Log</title>
+<style>
+  :root {
+    --bg: #0d0f0e;
+    --surface: #161a18;
+    --surface2: #1e2421;
+    --border: #2a302d;
+    --border2: #3a4240;
+    --text: #c8d4c8;
+    --text-muted: #6a7d70;
+    --text-dim: #485248;
+    --accent: #4a9e6a;
+    --accent-dim: #1d3a28;
+    --accent-bright: #5ec47f;
+    --warn: #c49a2a;
+    --warn-dim: #3a2e0d;
+    --danger: #c45a4a;
+    --danger-dim: #3a1a14;
+    --xp-color: #7ab8f5;
+    --radius: 6px;
+    --font: 'Share Tech Mono', 'Courier New', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* ── SCANLINE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      rgba(0,0,0,0.08) 3px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 1000;
+  }
+
+  .app {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 2rem 2rem 4rem;
+  }
+
+  @media (min-width: 1400px) {
+    .app { max-width: 1140px; }
+  }
+
+  /* ── HEADER ── */
+  .header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .logo {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.2em;
+    margin-bottom: 4px;
+  }
+
+  .title {
+    font-size: 22px;
+    color: var(--accent-bright);
+    letter-spacing: 0.08em;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 3px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── LEVEL BLOCK ── */
+  .level-block {
+    text-align: right;
+    min-width: 180px;
+  }
+
+  .level-name {
+    font-size: 13px;
+    color: var(--xp-color);
+    letter-spacing: 0.1em;
+    margin-bottom: 4px;
+  }
+
+  .xp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-bottom: 5px;
+  }
+
+  .xp-num {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .xp-bar-bg {
+    width: 140px;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .xp-bar-fill {
+    height: 100%;
+    background: var(--xp-color);
+    border-radius: 3px;
+    transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 6px rgba(122,184,245,0.5);
+  }
+
+  /* ── STATS ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 1.75rem;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+    text-align: center;
+  }
+
+  .stat-n {
+    font-size: 24px;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+
+  .stat-l {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.1em;
+    margin-top: 3px;
+    text-transform: uppercase;
+  }
+
+  /* ── FILTER TABS ── */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 1rem;
+  }
+
+  .tab {
+    padding: 5px 12px;
+    font-size: 11px;
+    font-family: var(--font);
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tab:hover { color: var(--text); border-color: var(--border2); }
+  .tab.active { color: var(--accent-bright); border-color: var(--accent); background: var(--accent-dim); }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    margin-top: 1.25rem;
+  }
+
+  /* ── QUEST CARDS ── */
+  .quest-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .quest {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .quest::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--border2);
+    transition: background 0.15s;
+  }
+
+  .quest[data-cat="研究"]::before { background: var(--accent); }
+  .quest[data-cat="映像"]::before { background: var(--warn); }
+  .quest[data-cat="生活"]::before { background: var(--xp-color); }
+  .quest[data-cat="その他"]::before { background: #b07af5; }
+
+  .quest:hover:not(.done) {
+    border-color: var(--border2);
+    background: var(--surface2);
+  }
+
+  .quest.done {
+    opacity: 0.45;
+    cursor: default;
+    border-color: var(--border);
+  }
+
+  .quest.done::before { background: var(--accent) !important; }
+
+  .check {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 13px;
+    color: var(--text-dim);
+    transition: all 0.2s;
+  }
+
+  .quest.done .check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  .quest-body { flex: 1; min-width: 0; }
+
+  .quest-name {
+    font-size: 14px;
+    color: var(--text);
+    letter-spacing: 0.02em;
+  }
+
+  .quest.done .quest-name {
+    text-decoration: line-through;
+    color: var(--text-dim);
+  }
+
+  .quest-meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+    align-items: center;
+  }
+
+  .cat-badge {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    padding: 2px 7px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .cat-研究  { color: var(--accent-bright); background: var(--accent-dim); }
+  .cat-映像  { color: var(--warn); background: var(--warn-dim); }
+  .cat-生活  { color: var(--xp-color); background: #1a2a3a; }
+  .cat-その他 { color: #b07af5; background: #241a38; }
+
+  .deadline {
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .deadline.urgent { color: var(--danger); }
+
+  .quest-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .xp-reward {
+    font-size: 12px;
+    color: var(--xp-color);
+    letter-spacing: 0.05em;
+  }
+
+  .quest.done .xp-reward { color: var(--accent); }
+
+  .del-btn {
+    font-size: 10px;
+    color: var(--text-dim);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font);
+    padding: 2px 4px;
+    border-radius: 3px;
+    transition: color 0.15s;
+  }
+
+  .del-btn:hover { color: var(--danger); }
+
+  /* ── ADD FORM ── */
+  .add-form {
+    margin-top: 1.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+  }
+
+  .add-form-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .add-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .add-row input,
+  .add-row select {
+    height: 36px;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    padding: 0 10px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .add-row input { flex: 1; min-width: 200px; }
+  .add-row input:focus { border-color: var(--accent); }
+
+  .add-row select option { background: var(--surface2); }
+
+  .add-row input[type="date"] { min-width: 150px; }
+
+  .add-btn {
+    height: 36px;
+    padding: 0 16px;
+    background: var(--accent);
+    color: #0a1a10;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+
+  .add-btn:hover { opacity: 0.85; }
+
+  .err {
+    font-size: 11px;
+    color: var(--danger);
+    margin-top: 6px;
+    display: none;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--surface2);
+    border: 1px solid var(--accent);
+    color: var(--accent-bright);
+    font-family: var(--font);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    pointer-events: none;
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+    opacity: 0;
+    z-index: 999;
+    white-space: nowrap;
+    box-shadow: 0 0 20px rgba(74,158,106,0.25);
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  /* ── LEVELUP OVERLAY ── */
+  .levelup {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .levelup.show { opacity: 1; pointer-events: all; }
+
+  .levelup-box {
+    text-align: center;
+    border: 1px solid var(--xp-color);
+    background: var(--surface);
+    padding: 2.5rem 3rem;
+    border-radius: 8px;
+    box-shadow: 0 0 40px rgba(122,184,245,0.3);
+  }
+
+  .levelup-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.2em;
+    margin-bottom: 8px;
+  }
+
+  .levelup-name {
+    font-size: 28px;
+    color: var(--xp-color);
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+
+  .levelup-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .levelup-close {
+    margin-top: 1.5rem;
+    padding: 8px 20px;
+    background: var(--xp-color);
+    color: #0a1a2a;
+    border: none;
+    border-radius: var(--radius);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-dim);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius);
+  }
+
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .header-top { flex-direction: column; }
+    .level-block { text-align: left; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="logo">// PERSONAL QUEST LOG</div>
+        <div class="title">Life PMC</div>
+        <div class="subtitle">研究・映像制作・私生活のタスク管理</div>
+      </div>
+      <div class="level-block">
+        <div class="level-name" id="level-name">RECRUIT</div>
+        <div class="xp-row">
+          <div class="xp-bar-bg">
+            <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
+          </div>
+          <span class="xp-num" id="xp-num">0 XP</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-l">Quests</div></div>
+      <div class="stat"><div class="stat-n" id="s-done">0</div><div class="stat-l">Completed</div></div>
+      <div class="stat"><div class="stat-n" id="s-remain">0</div><div class="stat-l">Remaining</div></div>
+      <div class="stat"><div class="stat-n" id="s-xp">0</div><div class="stat-l">Total XP</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-filter="all" onclick="setFilter('all',this)">ALL</button>
+    <button class="tab" data-filter="active" onclick="setFilter('active',this)">ACTIVE</button>
+    <button class="tab" data-filter="done" onclick="setFilter('done',this)">DONE</button>
+    <button class="tab" data-filter="研究" onclick="setFilter('研究',this)">研究</button>
+    <button class="tab" data-filter="映像" onclick="setFilter('映像',this)">映像</button>
+    <button class="tab" data-filter="生活" onclick="setFilter('生活',this)">生活</button>
+    <button class="tab" data-filter="その他" onclick="setFilter('その他',this)">その他</button>
+  </div>
+
+  <div class="section-label">// QUEST LOG</div>
+  <div class="quest-list" id="quest-list"></div>
+
+  <div class="add-form">
+    <div class="add-form-label">// ADD QUEST</div>
+    <div class="add-row">
+      <input type="text" id="new-name" placeholder="タスク名を入力..." />
+      <select id="new-cat">
+        <option value="研究">研究</option>
+        <option value="映像">映像</option>
+        <option value="生活">生活</option>
+        <option value="その他">その他</option>
+      </select>
+      <input type="date" id="new-deadline" />
+      <button class="add-btn" onclick="addTask()">+ ADD QUEST</button>
+    </div>
+    <div class="err" id="err">タスク名を入力してください</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="levelup" id="levelup">
+  <div class="levelup-box">
+    <div class="levelup-label">// RANK UP</div>
+    <div class="levelup-name" id="lu-name">TRAINEE</div>
+    <div class="levelup-sub" id="lu-sub">新しいランクに到達しました</div>
+    <button class="levelup-close" onclick="closeLevelup()">CONFIRM</button>
+  </div>
+</div>
+
+<script>
+const XP_BY_CAT = { '研究': 40, '映像': 35, '生活': 20, 'その他': 25 };
+
+const LEVELS = [
+  { min:0,    max:100,  name:'RECRUIT',    sub:'クエスト消化の第一歩' },
+  { min:100,  max:250,  name:'TRAINEE',    sub:'ペースが掴めてきた' },
+  { min:250,  max:500,  name:'NOVICE',     sub:'安定して進められている' },
+  { min:500,  max:900,  name:'OPERATOR',   sub:'複数プロジェクトを並走中' },
+  { min:900,  max:1500, name:'EXPERT',     sub:'かなりの実績' },
+  { min:1500, max:9999, name:'MASTER PMC', sub:'ベテランの域' }
+];
+
+const DEFAULT_TASKS = [
+  { id:1, name:'UVデータの収集・整理', cat:'研究', done:false, deadline:'2025-11-30' },
+  { id:2, name:'UVデータを棒グラフに可視化', cat:'研究', done:false, deadline:'2025-11-30' },
+  { id:3, name:'細胞イメージング実験', cat:'研究', done:false, deadline:'2025-12-15' },
+  { id:4, name:'イメージング結果の解析', cat:'研究', done:false, deadline:'2025-12-20' },
+  { id:5, name:'副テーマ論文まとめ', cat:'研究', done:false, deadline:'2025-12-26' },
+  { id:6, name:'メインテーマ現状把握・棚卸し', cat:'研究', done:false, deadline:'2025-10-31' },
+  { id:7, name:'教授とゴール設定の面談', cat:'研究', done:false, deadline:'2025-10-31' },
+  { id:8, name:'学位申請', cat:'研究', done:false, deadline:'2026-01-30' },
+  { id:9, name:'論文提出', cat:'研究', done:false, deadline:'2026-02-03' },
+  { id:10, name:'修士論文発表', cat:'研究', done:false, deadline:'2026-02-13' },
+  { id:11, name:'映像案件の編集作業', cat:'映像', done:false, deadline:null },
+  { id:12, name:'クライアントに納品', cat:'映像', done:false, deadline:null },
+];
+
+let state = load();
+let filter = 'all';
+let nextId = Math.max(...state.tasks.map(t=>t.id), 10) + 1;
+
+function load() {
+  try {
+    const s = localStorage.getItem('life-pmc');
+    if (s) return JSON.parse(s);
+  } catch(e) {}
+  return { tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)), xp: 0 };
+}
+
+function save() {
+  localStorage.setItem('life-pmc', JSON.stringify(state));
+}
+
+function getLevel(xp) {
+  for (const lv of LEVELS) if (xp >= lv.min && xp < lv.max) return lv;
+  return LEVELS[LEVELS.length-1];
+}
+
+function isUrgent(deadline) {
+  if (!deadline) return false;
+  const d = new Date(deadline);
+  const now = new Date();
+  const diff = (d - now) / (1000*60*60*24);
+  return diff >= 0 && diff <= 14;
+}
+
+function isPast(deadline) {
+  if (!deadline) return false;
+  return new Date(deadline) < new Date();
+}
+
+function fmtDate(s) {
+  if (!s) return '';
+  const d = new Date(s);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function setFilter(f, el) {
+  filter = f;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function render() {
+  const lv = getLevel(state.xp);
+  const pct = Math.min(100, Math.round((state.xp - lv.min) / (lv.max - lv.min) * 100));
+  document.getElementById('xp-bar').style.width = pct + '%';
+  document.getElementById('level-name').textContent = lv.name;
+  document.getElementById('xp-num').textContent = state.xp + ' XP';
+
+  const total = state.tasks.length;
+  const done = state.tasks.filter(t=>t.done).length;
+  document.getElementById('s-total').textContent = total;
+  document.getElementById('s-done').textContent = done;
+  document.getElementById('s-remain').textContent = total - done;
+  document.getElementById('s-xp').textContent = state.xp;
+
+  let visible = state.tasks;
+  if (filter === 'active') visible = visible.filter(t => !t.done);
+  else if (filter === 'done') visible = visible.filter(t => t.done);
+  else if (['研究','映像','生活','その他'].includes(filter)) visible = visible.filter(t => t.cat === filter);
+
+  const active = visible.filter(t=>!t.done);
+  const doneList = visible.filter(t=>t.done);
+  const sorted = [...active, ...doneList];
+
+  const list = document.getElementById('quest-list');
+  list.innerHTML = '';
+
+  if (sorted.length === 0) {
+    list.innerHTML = '<div class="empty">// NO QUESTS FOUND</div>';
+    return;
+  }
+
+  sorted.forEach(t => {
+    const xp = XP_BY_CAT[t.cat] || 20;
+    const urgent = !t.done && isUrgent(t.deadline);
+    const past = !t.done && isPast(t.deadline);
+    const div = document.createElement('div');
+    div.className = 'quest' + (t.done ? ' done' : '');
+    div.setAttribute('data-cat', t.cat);
+
+    let deadlineHtml = '';
+    if (t.deadline) {
+      const cls = past ? 'deadline urgent' : (urgent ? 'deadline urgent' : 'deadline');
+      const prefix = past ? '⚠ OVERDUE ' : (urgent ? '⚡ ' : '');
+      deadlineHtml = `<span class="${cls}">${prefix}${fmtDate(t.deadline)}</span>`;
+    }
+
+    div.innerHTML = `
+      <div class="check">${t.done ? '✓' : '○'}</div>
+      <div class="quest-body">
+        <div class="quest-name">${t.name}</div>
+        <div class="quest-meta">
+          <span class="cat-badge cat-${t.cat}">${t.cat}</span>
+          ${deadlineHtml}
+        </div>
+      </div>
+      <div class="quest-right">
+        <span class="xp-reward">${t.done ? '✓' : '+'} ${xp} XP</span>
+        ${!t.done ? `<button class="del-btn" onclick="deleteTask(${t.id},event)">DELETE</button>` : ''}
+      </div>
+    `;
+    if (!t.done) div.onclick = () => complete(t.id);
+    list.appendChild(div);
+  });
+}
+
+function complete(id) {
+  const t = state.tasks.find(x=>x.id===id);
+  if (!t || t.done) return;
+  const prevLv = getLevel(state.xp).name;
+  t.done = true;
+  const xp = XP_BY_CAT[t.cat] || 20;
+  state.xp += xp;
+  save();
+  playBeep();
+  showToast(`🎯 QUEST COMPLETE — +${xp} XP`);
+  const newLv = getLevel(state.xp);
+  if (newLv.name !== prevLv) {
+    setTimeout(() => showLevelup(newLv), 800);
+  }
+  render();
+}
+
+function deleteTask(id, e) {
+  e.stopPropagation();
+  state.tasks = state.tasks.filter(t=>t.id!==id);
+  save();
+  render();
+}
+
+function addTask() {
+  const name = document.getElementById('new-name').value.trim();
+  const cat = document.getElementById('new-cat').value;
+  const deadline = document.getElementById('new-deadline').value;
+  const err = document.getElementById('err');
+  if (!name) { err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  state.tasks.push({ id: nextId++, name, cat, done: false, deadline: deadline || null });
+  document.getElementById('new-name').value = '';
+  document.getElementById('new-deadline').value = '';
+  save();
+  render();
+  showToast('// NEW QUEST ADDED');
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+function showLevelup(lv) {
+  document.getElementById('lu-name').textContent = lv.name;
+  document.getElementById('lu-sub').textContent = lv.sub;
+  document.getElementById('levelup').classList.add('show');
+  playLevelup();
+}
+
+function closeLevelup() {
+  document.getElementById('levelup').classList.remove('show');
+}
+
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[880,0,0.1],[1100,0.12,0.1],[1320,0.24,0.15]].forEach(([f,s,d]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = f; o.type = 'square';
+      g.gain.setValueAtTime(0.07, ctx.currentTime+s);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+s+d);
+      o.start(ctx.currentTime+s); o.stop(ctx.currentTime+s+d+0.05);
+    });
+  } catch(e) {}
+}
+
+function playLevelup() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[523,0,0.15],[659,0.15,0.15],[784,0.3,0.15],[1047,0.45,0.35]].forEach(([f,s,d]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = f; o.type = 'triangle';
+      g.gain.setValueAtTime(0.1, ctx.currentTime+s);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+s+d);
+      o.start(ctx.currentTime+s); o.stop(ctx.currentTime+s+d+0.05);
+    });
+  } catch(e) {}
+}
+
+document.getElementById('new-name').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
+
+render();
+</script>
+</body>
+</html>
