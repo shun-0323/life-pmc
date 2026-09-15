@@ -123,6 +123,22 @@
     color: var(--text-muted);
   }
 
+  .pip-btn {
+    margin-top: 8px;
+    padding: 5px 10px;
+    font-size: 10px;
+    font-family: var(--font);
+    letter-spacing: 0.03em;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text-muted);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .pip-btn:hover { border-color: var(--accent); color: var(--accent-bright); }
+
   .xp-bar-bg {
     width: 140px;
     height: 5px;
@@ -845,6 +861,7 @@
           </div>
           <span class="xp-num" id="xp-num">0 XP</span>
         </div>
+        <button class="pip-btn" id="pip-btn" onclick="togglePinp()">🪟 フロート表示</button>
       </div>
     </div>
 
@@ -981,6 +998,8 @@ state.ytFavorites = state.ytFavorites || [];
 let filter = 'all';
 let nextId = Math.max(...state.tasks.map(t=>t.id), 10) + 1;
 let nextYtId = Math.max(...state.ytFavorites.map(f=>f.id), 0) + 1;
+let pipWindowRef = null;
+let pipContainerRef = null;
 
 function dateStr(d) {
   const pad = n => String(n).padStart(2,'0');
@@ -1057,6 +1076,7 @@ function render() {
   document.getElementById('s-remain').textContent = total - done;
   document.getElementById('s-xp').textContent = state.xp;
   document.getElementById('s-streak').textContent = computeStreak();
+  if (pipContainerRef) renderPipContent();
 
   let visible = state.tasks;
   if (filter === 'active') visible = visible.filter(t => !t.done);
@@ -1331,6 +1351,84 @@ function renderYtFavorites() {
     div.innerHTML = `<span>▶ ${f.title}</span><button class="yt-fav-del" onclick="ytDeleteFavorite(${f.id},event)">✕</button>`;
     div.onclick = () => ytPlay(f.videoId);
     list.appendChild(div);
+  });
+}
+
+/* ── PICTURE-IN-PICTURE ── */
+async function togglePinp() {
+  if (pipWindowRef) {
+    pipWindowRef.close();
+    return;
+  }
+  if (!('documentPictureInPicture' in window)) {
+    showToast('// フロート表示はChrome / Edgeのみ対応しています');
+    return;
+  }
+  try {
+    const pipWindow = await documentPictureInPicture.requestWindow({ width: 300, height: 420 });
+    pipWindow.document.title = 'Life PMC';
+    pipWindow.document.body.style.margin = '0';
+    pipWindow.document.body.style.background = '#0d0f0e';
+
+    const fontLink = pipWindow.document.createElement('link');
+    fontLink.rel = 'stylesheet';
+    fontLink.href = 'https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap';
+    pipWindow.document.head.appendChild(fontLink);
+
+    const container = pipWindow.document.createElement('div');
+    container.id = 'pip-root';
+    container.style.cssText = 'background:#0d0f0e; min-height:100vh; padding:14px; box-sizing:border-box; font-family:"Share Tech Mono",monospace;';
+    pipWindow.document.body.appendChild(container);
+
+    pipWindowRef = pipWindow;
+    pipContainerRef = container;
+    renderPipContent();
+
+    const btn = document.getElementById('pip-btn');
+    if (btn) btn.textContent = '🪟 フロートを閉じる';
+
+    pipWindow.addEventListener('pagehide', () => {
+      pipWindowRef = null;
+      pipContainerRef = null;
+      const b = document.getElementById('pip-btn');
+      if (b) b.textContent = '🪟 フロート表示';
+    });
+  } catch (e) {
+    showToast('// フロート表示の起動に失敗しました');
+  }
+}
+
+function renderPipContent() {
+  if (!pipContainerRef || !pipWindowRef) return;
+  const doc = pipWindowRef.document;
+  const lv = getLevel(state.xp);
+  const pct = Math.min(100, Math.round((state.xp - lv.min) / (lv.max - lv.min) * 100));
+  const active = [...state.tasks.filter(t => !t.done)].sort((a,b) => {
+    return (a.deadline || '9999-99-99') < (b.deadline || '9999-99-99') ? -1 : 1;
+  });
+
+  pipContainerRef.innerHTML = `
+    <div style="font-size:11px;color:#7ab8f5;letter-spacing:.08em;margin-bottom:2px;">LIFE PMC</div>
+    <div style="font-size:10px;color:#6a7d70;margin-bottom:8px;">${lv.name} — ${state.xp} XP</div>
+    <div style="height:4px;background:#2a302d;border-radius:2px;overflow:hidden;margin-bottom:12px;">
+      <div style="height:100%;width:${pct}%;background:#7ab8f5;"></div>
+    </div>
+    <div id="pip-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto;"></div>
+  `;
+
+  const list = pipContainerRef.querySelector('#pip-list');
+  if (active.length === 0) {
+    list.innerHTML = '<div style="font-size:11px;color:#485248;">クエストはありません</div>';
+    return;
+  }
+
+  active.slice(0, 12).forEach(t => {
+    const xp = XP_BY_CAT[t.cat] || 20;
+    const row = doc.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 8px;background:#161a18;border:1px solid #2a302d;border-radius:6px;cursor:pointer;';
+    row.innerHTML = `<span style="width:16px;height:16px;border-radius:50%;border:1.5px solid #3a4240;flex-shrink:0;"></span><span style="flex:1;font-size:11px;color:#c8d4c8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${t.name}</span><span style="font-size:10px;color:#7ab8f5;flex-shrink:0;">+${xp}</span>`;
+    row.onclick = () => { complete(t.id); };
+    list.appendChild(row);
   });
 }
 
