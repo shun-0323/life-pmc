@@ -243,8 +243,8 @@
   }
 
   .quest.done {
-    opacity: 0.45;
-    cursor: default;
+    opacity: 0.55;
+    cursor: pointer;
     border-color: var(--border);
   }
 
@@ -714,10 +714,13 @@ function render() {
       </div>
       <div class="quest-right">
         <span class="xp-reward">${t.done ? '✓' : '+'} ${xp} XP</span>
-        ${!t.done ? `<button class="del-btn" onclick="deleteTask(${t.id},event)">DELETE</button>` : ''}
+        ${!t.done
+          ? `<button class="del-btn" onclick="deleteTask(${t.id},event)">DELETE</button>`
+          : `<button class="del-btn" onclick="uncomplete(${t.id},event)">UNDO</button>`}
       </div>
     `;
     if (!t.done) div.onclick = () => complete(t.id);
+    else div.onclick = () => uncomplete(t.id);
     list.appendChild(div);
   });
 }
@@ -743,6 +746,18 @@ function deleteTask(id, e) {
   e.stopPropagation();
   state.tasks = state.tasks.filter(t=>t.id!==id);
   save();
+  render();
+}
+
+function uncomplete(id, e) {
+  if (e) e.stopPropagation();
+  const t = state.tasks.find(x=>x.id===id);
+  if (!t || !t.done) return;
+  t.done = false;
+  const xp = XP_BY_CAT[t.cat] || 20;
+  state.xp = Math.max(0, state.xp - xp);
+  save();
+  showToast('// QUEST REVERTED');
   render();
 }
 
