@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Life PMC — Quest Log</title>
+<script>
+(function(){
+  try {
+    var t = localStorage.getItem('life-pmc-theme');
+    if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  } catch(e) {}
+})();
+</script>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" href="favicon-32.png" type="image/png" sizes="32x32">
 <link rel="icon" href="favicon-16.png" type="image/png" sizes="16x16">
@@ -28,8 +36,29 @@
     --danger: #c45a4a;
     --danger-dim: #3a1a14;
     --xp-color: #7ab8f5;
+    --scanline: rgba(0,0,0,0.08);
     --radius: 6px;
     --font: 'Share Tech Mono', 'Courier New', monospace;
+  }
+
+  html[data-theme="light"] {
+    --bg: #f1f3ee;
+    --surface: #ffffff;
+    --surface2: #e9ece3;
+    --border: #d6dacf;
+    --border2: #b7bfae;
+    --text: #17201a;
+    --text-muted: #56655a;
+    --text-dim: #93a091;
+    --accent: #2f8f56;
+    --accent-dim: #ddf0e3;
+    --accent-bright: #1f7a45;
+    --warn: #9c7016;
+    --warn-dim: #f7ecd2;
+    --danger: #b23f2e;
+    --danger-dim: #f8e0da;
+    --xp-color: #2f6fae;
+    --scanline: rgba(0,0,0,0.035);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -51,8 +80,8 @@
       to bottom,
       transparent 0px,
       transparent 3px,
-      rgba(0,0,0,0.08) 3px,
-      rgba(0,0,0,0.08) 4px
+      var(--scanline) 3px,
+      var(--scanline) 4px
     );
     pointer-events: none;
     z-index: 1000;
@@ -130,7 +159,6 @@
   }
 
   .pip-btn {
-    margin-top: 8px;
     padding: 5px 10px;
     font-size: 10px;
     font-family: var(--font);
@@ -578,6 +606,7 @@
   /* ── ADD FORM ── */
   .add-form {
     margin-bottom: 1.75rem;
+    margin-top: 1.5rem;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -769,6 +798,62 @@
   }
 
   /* ── ACHIEVEMENTS ── */
+  /* ── ACHIEVEMENT TREE ── */
+  .tree-branch {
+    margin-bottom: 18px;
+  }
+
+  .tree-branch-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .tree-chain {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .tree-node {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.35);
+    transition: all 0.15s;
+  }
+
+  .tree-node.unlocked {
+    border: 2px solid var(--warn);
+    background: var(--warn-dim);
+    box-shadow: 0 0 7px rgba(196,154,42,0.3);
+  }
+
+  .tree-connector {
+    flex: 1 1 24px;
+    min-width: 16px;
+    max-width: 40px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--border2);
+    opacity: 0.6;
+  }
+
+  .tree-connector.active {
+    background: var(--warn);
+    opacity: 1;
+    box-shadow: 0 0 4px rgba(196,154,42,0.5);
+  }
+
   .badges-row {
     display: flex;
     flex-wrap: wrap;
@@ -918,6 +1003,37 @@
 <body>
 
 <div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="logo">// PERSONAL QUEST LOG</div>
+        <div class="title">Life PMC</div>
+        <div class="subtitle">研究・映像制作・私生活のタスク管理</div>
+      </div>
+      <div class="level-block">
+        <div class="level-name" id="level-name">RECRUIT</div>
+        <div class="xp-row">
+          <div class="xp-bar-bg">
+            <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
+          </div>
+          <span class="xp-num" id="xp-num">0 XP</span>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:8px;">
+          <button class="pip-btn" id="pip-btn" onclick="togglePinp()">🪟 フロート表示</button>
+          <button class="pip-btn" id="theme-btn" onclick="toggleTheme()">☀️ ライト</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-l">Quests</div></div>
+      <div class="stat"><div class="stat-n" id="s-done">0</div><div class="stat-l">Completed</div></div>
+      <div class="stat"><div class="stat-n" id="s-remain">0</div><div class="stat-l">Remaining</div></div>
+      <div class="stat"><div class="stat-n" id="s-xp">0</div><div class="stat-l">Total XP</div></div>
+      <div class="stat"><div class="stat-n" id="s-streak">0</div><div class="stat-l">Day streak</div></div>
+    </div>
+  </div>
+
   <div class="add-form">
     <div class="add-form-label">// ADD QUEST</div>
     <div class="add-row">
@@ -937,33 +1053,21 @@
     <div class="err" id="err">タスク名を入力してください</div>
   </div>
 
-  <div class="header">
-    <div class="header-top">
-      <div>
-        <div class="logo">// PERSONAL QUEST LOG</div>
-        <div class="title">Life PMC</div>
-        <div class="subtitle">研究・映像制作・私生活のタスク管理</div>
-      </div>
-      <div class="level-block">
-        <div class="level-name" id="level-name">RECRUIT</div>
-        <div class="xp-row">
-          <div class="xp-bar-bg">
-            <div class="xp-bar-fill" id="xp-bar" style="width:0%"></div>
-          </div>
-          <span class="xp-num" id="xp-num">0 XP</span>
-        </div>
-        <button class="pip-btn" id="pip-btn" onclick="togglePinp()">🪟 フロート表示</button>
-      </div>
-    </div>
-
-    <div class="stats">
-      <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-l">Quests</div></div>
-      <div class="stat"><div class="stat-n" id="s-done">0</div><div class="stat-l">Completed</div></div>
-      <div class="stat"><div class="stat-n" id="s-remain">0</div><div class="stat-l">Remaining</div></div>
-      <div class="stat"><div class="stat-n" id="s-xp">0</div><div class="stat-l">Total XP</div></div>
-      <div class="stat"><div class="stat-n" id="s-streak">0</div><div class="stat-l">Day streak</div></div>
-    </div>
+  <div class="tabs">
+    <button class="tab active" data-filter="all" onclick="setFilter('all',this)">ALL</button>
+    <button class="tab" data-filter="active" onclick="setFilter('active',this)">ACTIVE</button>
+    <button class="tab" data-filter="done" onclick="setFilter('done',this)">DONE</button>
+    <button class="tab" data-filter="研究" onclick="setFilter('研究',this)">研究</button>
+    <button class="tab" data-filter="映像" onclick="setFilter('映像',this)">映像</button>
+    <button class="tab" data-filter="生活" onclick="setFilter('生活',this)">生活</button>
+    <button class="tab" data-filter="その他" onclick="setFilter('その他',this)">その他</button>
   </div>
+
+  <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
+    <span>// QUEST LOG</span>
+    <button class="del-btn" style="font-size:10px;" onclick="clearAllTasks()">全クエストを削除</button>
+  </div>
+  <div class="quest-list" id="quest-list"></div>
 
   <div class="section-label">// TOOLS</div>
   <div class="tools-grid">
@@ -1011,9 +1115,6 @@
     <button class="sync-btn ghost" id="sync-disconnect-btn" onclick="syncDisconnect()" style="display:none;">切断</button>
   </div>
 
-  <div class="section-label">// ACHIEVEMENTS</div>
-  <div class="badges-row" id="badges-row"></div>
-
   <div class="section-label">// THIS WEEK (直近7日間)</div>
   <div class="week-summary" id="week-summary">
     <div class="stat"><div class="stat-n" id="w-count">0</div><div class="stat-l">Quests</div></div>
@@ -1021,18 +1122,10 @@
     <div class="stat"><div class="stat-n" id="w-cat">—</div><div class="stat-l">Top category</div></div>
   </div>
 
-  <div class="tabs">
-    <button class="tab active" data-filter="all" onclick="setFilter('all',this)">ALL</button>
-    <button class="tab" data-filter="active" onclick="setFilter('active',this)">ACTIVE</button>
-    <button class="tab" data-filter="done" onclick="setFilter('done',this)">DONE</button>
-    <button class="tab" data-filter="研究" onclick="setFilter('研究',this)">研究</button>
-    <button class="tab" data-filter="映像" onclick="setFilter('映像',this)">映像</button>
-    <button class="tab" data-filter="生活" onclick="setFilter('生活',this)">生活</button>
-    <button class="tab" data-filter="その他" onclick="setFilter('その他',this)">その他</button>
-  </div>
-
-  <div class="section-label">// QUEST LOG</div>
-  <div class="quest-list" id="quest-list"></div>
+  <div class="section-label">// ACHIEVEMENTS <span id="badges-count" style="color:var(--text-muted); letter-spacing:0.05em;"></span></div>
+  <div id="tree-branches"></div>
+  <div class="section-label" style="margin-top:0.5rem;">// OTHER ACHIEVEMENTS</div>
+  <div class="badges-row" id="badges-row"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -1058,20 +1151,7 @@ const LEVELS = [
   { min:1500, max:9999, name:'MASTER PMC', sub:'ベテランの域' }
 ];
 
-const DEFAULT_TASKS = [
-  { id:1, name:'UVデータの収集・整理', cat:'研究', done:false, deadline:'2025-11-30' },
-  { id:2, name:'UVデータを棒グラフに可視化', cat:'研究', done:false, deadline:'2025-11-30' },
-  { id:3, name:'細胞イメージング実験', cat:'研究', done:false, deadline:'2025-12-15' },
-  { id:4, name:'イメージング結果の解析', cat:'研究', done:false, deadline:'2025-12-20' },
-  { id:5, name:'副テーマ論文まとめ', cat:'研究', done:false, deadline:'2025-12-26' },
-  { id:6, name:'メインテーマ現状把握・棚卸し', cat:'研究', done:false, deadline:'2025-10-31' },
-  { id:7, name:'教授とゴール設定の面談', cat:'研究', done:false, deadline:'2025-10-31' },
-  { id:8, name:'学位申請', cat:'研究', done:false, deadline:'2026-01-30' },
-  { id:9, name:'論文提出', cat:'研究', done:false, deadline:'2026-02-03' },
-  { id:10, name:'修士論文発表', cat:'研究', done:false, deadline:'2026-02-13' },
-  { id:11, name:'映像案件の編集作業', cat:'映像', done:false, deadline:null },
-  { id:12, name:'クライアントに納品', cat:'映像', done:false, deadline:null },
-];
+const DEFAULT_TASKS = [];
 
 let state = load();
 state.streakDates = state.streakDates || [];
@@ -1080,6 +1160,7 @@ state.unlockedBadges = state.unlockedBadges || [];
 state.totalCompleted = state.totalCompleted || 0;
 state.pomoTotal = state.pomoTotal || 0;
 state.completionLog = state.completionLog || [];
+state.everUncompleted = state.everUncompleted || false;
 {
   const _today = dateStr(new Date());
   if (state.pomoDate !== _today) { state.pomoDate = _today; state.pomoToday = 0; }
@@ -1108,17 +1189,84 @@ function computeStreak() {
 }
 
 /* ── ACHIEVEMENTS ── */
+function catCount(cat) {
+  return state.tasks.filter(t => t.done && t.cat === cat).length;
+}
+
+function maxDayCount() {
+  const map = {};
+  (state.completionLog || []).forEach(e => { map[e.date] = (map[e.date] || 0) + 1; });
+  const counts = Object.values(map);
+  return counts.length ? Math.max(...counts) : 0;
+}
+
+function hasEarlyBird() {
+  return (state.completionLog || []).some(e => typeof e.hour === 'number' && e.hour < 7);
+}
+
+function hasNightOwl() {
+  return (state.completionLog || []).some(e => typeof e.hour === 'number' && (e.hour >= 23 || e.hour < 3));
+}
+
+function hasWeekendCompletion() {
+  return (state.completionLog || []).some(e => {
+    const day = new Date(e.date + 'T00:00:00').getDay();
+    return day === 0 || day === 6;
+  });
+}
+
 const BADGES = [
-  { id: 'first_quest',    icon: '🔰', name: '最初の一歩',     desc: 'クエストを1つ完了',        check: s => (s.totalCompleted||0) >= 1 },
-  { id: 'quests_10',      icon: '⚔️', name: '駆け出し',       desc: 'クエストを10個完了',       check: s => (s.totalCompleted||0) >= 10 },
-  { id: 'quests_50',      icon: '🛡️', name: '熟練',           desc: 'クエストを50個完了',       check: s => (s.totalCompleted||0) >= 50 },
-  { id: 'quests_100',     icon: '👑', name: 'ベテラン',       desc: 'クエストを100個完了',      check: s => (s.totalCompleted||0) >= 100 },
-  { id: 'streak_3',       icon: '🔥', name: '習慣化の兆し',   desc: '3日連続で達成',            check: s => computeStreak() >= 3 },
-  { id: 'streak_7',       icon: '🔥', name: '一週間継続',     desc: '7日連続で達成',            check: s => computeStreak() >= 7 },
-  { id: 'streak_30',      icon: '🔥', name: '継続は力',       desc: '30日連続で達成',           check: s => computeStreak() >= 30 },
-  { id: 'pomo_10',        icon: '🍅', name: '集中の達人',     desc: 'ポモドーロを10回完了',     check: s => (s.pomoTotal||0) >= 10 },
-  { id: 'all_categories', icon: '🎯', name: 'オールラウンダー', desc: '全カテゴリでクエストを完了', check: s => ['研究','映像','生活','その他'].every(c => s.tasks.some(t => t.done && t.cat === c)) },
-  { id: 'master_pmc',     icon: '🏆', name: 'MASTER PMC',     desc: 'MASTER PMCランクに到達',   check: s => getLevel(s.xp).name === 'MASTER PMC' },
+  // クエスト消化数
+  { id: 'first_quest',    icon: '🔰', name: '最初の一歩',       desc: 'クエストを1個完了',           check: s => (s.totalCompleted||0) >= 1 },
+  { id: 'quests_5',       icon: '⚔️', name: 'ウォームアップ',   desc: 'クエストを5個完了',           check: s => (s.totalCompleted||0) >= 5 },
+  { id: 'quests_10',      icon: '⚔️', name: '駆け出し',         desc: 'クエストを10個完了',          check: s => (s.totalCompleted||0) >= 10 },
+  { id: 'quests_25',      icon: '🗡️', name: '軌道に乗ってきた', desc: 'クエストを25個完了',          check: s => (s.totalCompleted||0) >= 25 },
+  { id: 'quests_50',      icon: '🛡️', name: '熟練',             desc: 'クエストを50個完了',          check: s => (s.totalCompleted||0) >= 50 },
+  { id: 'quests_75',      icon: '🛡️', name: '手練れ',           desc: 'クエストを75個完了',          check: s => (s.totalCompleted||0) >= 75 },
+  { id: 'quests_100',     icon: '👑', name: 'ベテラン',         desc: 'クエストを100個完了',         check: s => (s.totalCompleted||0) >= 100 },
+  { id: 'quests_200',     icon: '👑', name: '伝説の始まり',     desc: 'クエストを200個完了',         check: s => (s.totalCompleted||0) >= 200 },
+
+  // 連続日数
+  { id: 'streak_3',       icon: '🔥', name: '習慣化の兆し',     desc: '3日連続で達成',              check: s => computeStreak() >= 3 },
+  { id: 'streak_7',       icon: '🔥', name: '一週間継続',       desc: '7日連続で達成',              check: s => computeStreak() >= 7 },
+  { id: 'streak_14',      icon: '🔥', name: '二週間の炎',       desc: '14日連続で達成',             check: s => computeStreak() >= 14 },
+  { id: 'streak_30',      icon: '🔥', name: '継続は力',         desc: '30日連続で達成',             check: s => computeStreak() >= 30 },
+  { id: 'streak_60',      icon: '🔥', name: '不屈',             desc: '60日連続で達成',             check: s => computeStreak() >= 60 },
+  { id: 'streak_100',     icon: '🔥', name: '百日行',           desc: '100日連続で達成',            check: s => computeStreak() >= 100 },
+
+  // ポモドーロ
+  { id: 'pomo_1',         icon: '🍅', name: '初集中',           desc: 'ポモドーロを1回完了',        check: s => (s.pomoTotal||0) >= 1 },
+  { id: 'pomo_10',        icon: '🍅', name: '集中の達人',       desc: 'ポモドーロを10回完了',       check: s => (s.pomoTotal||0) >= 10 },
+  { id: 'pomo_25',        icon: '🍅', name: '没頭',             desc: 'ポモドーロを25回完了',       check: s => (s.pomoTotal||0) >= 25 },
+  { id: 'pomo_50',        icon: '🍅', name: 'フロー状態',       desc: 'ポモドーロを50回完了',       check: s => (s.pomoTotal||0) >= 50 },
+  { id: 'pomo_100',       icon: '🍅', name: '集中の鬼',         desc: 'ポモドーロを100回完了',      check: s => (s.pomoTotal||0) >= 100 },
+
+  // カテゴリ別
+  { id: 'cat_research_10', icon: '🔬', name: '研究者',          desc: '研究カテゴリを10個完了',     check: s => catCount('研究') >= 10 },
+  { id: 'cat_video_10',    icon: '🎬', name: 'クリエイター',    desc: '映像カテゴリを10個完了',     check: s => catCount('映像') >= 10 },
+  { id: 'cat_life_10',     icon: '🏠', name: '生活の達人',      desc: '生活カテゴリを10個完了',     check: s => catCount('生活') >= 10 },
+  { id: 'cat_other_10',    icon: '🎲', name: '何でも屋',        desc: 'その他カテゴリを10個完了',   check: s => catCount('その他') >= 10 },
+  { id: 'all_categories',  icon: '🎯', name: 'オールラウンダー', desc: '全カテゴリでクエストを完了', check: s => ['研究','映像','生活','その他'].every(c => s.tasks.some(t => t.done && t.cat === c)) },
+
+  // ランク到達
+  { id: 'tier_trainee',   icon: '🥈', name: 'TRAINEE到達',      desc: 'TRAINEEランクに到達',        check: s => s.xp >= 100 },
+  { id: 'tier_novice',    icon: '🥈', name: 'NOVICE到達',       desc: 'NOVICEランクに到達',         check: s => s.xp >= 250 },
+  { id: 'tier_operator',  icon: '🥇', name: 'OPERATOR到達',     desc: 'OPERATORランクに到達',       check: s => s.xp >= 500 },
+  { id: 'tier_expert',    icon: '🥇', name: 'EXPERT到達',       desc: 'EXPERTランクに到達',         check: s => s.xp >= 900 },
+  { id: 'master_pmc',     icon: '🏆', name: 'MASTER PMC',       desc: 'MASTER PMCランクに到達',     check: s => s.xp >= 1500 },
+
+  // 生活パターン
+  { id: 'early_bird',     icon: '🌅', name: '早起きは三文の徳', desc: '朝7時前にクエストを完了',    check: s => hasEarlyBird() },
+  { id: 'night_owl',      icon: '🦉', name: '夜型プログラマー', desc: '深夜23時〜3時にクエストを完了', check: s => hasNightOwl() },
+  { id: 'weekend_warrior',icon: '🏖️', name: '週末戦士',         desc: '土日にクエストを完了',       check: s => hasWeekendCompletion() },
+  { id: 'big_day',        icon: '⚡', name: '怒涛の一日',       desc: '1日に5個以上クエストを完了', check: s => maxDayCount() >= 5 },
+
+  // その他の使い込み
+  { id: 'note_taker',     icon: '📝', name: 'メモ魔',           desc: 'メモを1つ以上つける',        check: s => s.tasks.some(t => t.note) },
+  { id: 'meticulous',     icon: '📚', name: '几帳面',           desc: 'メモを5つ以上つける',        check: s => s.tasks.filter(t => t.note).length >= 5 },
+  { id: 'yt_first',       icon: '🎵', name: '作業用BGM',        desc: 'YouTubeお気に入りを1つ追加', check: s => (s.ytFavorites||[]).length >= 1 },
+  { id: 'yt_playlist',    icon: '🎧', name: 'プレイリスト充実', desc: 'YouTubeお気に入りを5つ追加', check: s => (s.ytFavorites||[]).length >= 5 },
+  { id: 'careful',        icon: '↩️', name: '慎重派',           desc: 'UNDOを使ったことがある',     check: s => !!s.everUncompleted },
 ];
 
 function checkBadges() {
@@ -1139,18 +1287,73 @@ function checkBadges() {
   }
 }
 
+// 本当に同じ指標の閾値違いになっている実績だけを鎖でつなぐ（Minecraft実績画面のイメージ）
+const TREE_BRANCHES = [
+  { label: 'クエスト消化数', ids: ['first_quest','quests_5','quests_10','quests_25','quests_50','quests_75','quests_100','quests_200'] },
+  { label: '連続達成日数',   ids: ['streak_3','streak_7','streak_14','streak_30','streak_60','streak_100'] },
+  { label: '集中セッション', ids: ['pomo_1','pomo_10','pomo_25','pomo_50','pomo_100'] },
+  { label: 'ランク到達',     ids: ['tier_trainee','tier_novice','tier_operator','tier_expert','master_pmc'] },
+  { label: 'メモ活用',       ids: ['note_taker','meticulous'] },
+  { label: 'BGM充実',        ids: ['yt_first','yt_playlist'] },
+];
+const TREE_IDS = TREE_BRANCHES.flatMap(b => b.ids);
+const STANDALONE_IDS = BADGES.map(b => b.id).filter(id => !TREE_IDS.includes(id));
+
+function badgeById(id) { return BADGES.find(b => b.id === id); }
+
+function renderAchievementTree() {
+  const container = document.getElementById('tree-branches');
+  if (!container) return;
+  const unlockedList = state.unlockedBadges || [];
+  container.innerHTML = '';
+  TREE_BRANCHES.forEach(branch => {
+    const wrap = document.createElement('div');
+    wrap.className = 'tree-branch';
+    const label = document.createElement('div');
+    label.className = 'tree-branch-label';
+    label.textContent = branch.label;
+    wrap.appendChild(label);
+
+    const chain = document.createElement('div');
+    chain.className = 'tree-chain';
+    branch.ids.forEach((id, i) => {
+      const b = badgeById(id);
+      if (!b) return;
+      const unlocked = unlockedList.includes(id);
+      const node = document.createElement('div');
+      node.className = 'tree-node' + (unlocked ? ' unlocked' : '');
+      node.title = `${b.name} — ${b.desc}`;
+      node.textContent = unlocked ? b.icon : '🔒';
+      chain.appendChild(node);
+      if (i < branch.ids.length - 1) {
+        const connector = document.createElement('div');
+        connector.className = 'tree-connector' + (unlocked ? ' active' : '');
+        chain.appendChild(connector);
+      }
+    });
+    wrap.appendChild(chain);
+    container.appendChild(wrap);
+  });
+}
+
 function renderBadges() {
   const row = document.getElementById('badges-row');
+  const countEl = document.getElementById('badges-count');
   if (!row) return;
+  const unlockedList = state.unlockedBadges || [];
+  if (countEl) countEl.textContent = `${unlockedList.length} / ${BADGES.length}`;
   row.innerHTML = '';
-  BADGES.forEach(b => {
-    const unlocked = (state.unlockedBadges || []).includes(b.id);
+  STANDALONE_IDS.forEach(id => {
+    const b = badgeById(id);
+    if (!b) return;
+    const unlocked = unlockedList.includes(id);
     const chip = document.createElement('div');
     chip.className = 'badge-chip' + (unlocked ? ' unlocked' : '');
-    chip.title = unlocked ? b.desc : '???';
-    chip.innerHTML = `<span class="badge-icon">${unlocked ? b.icon : '🔒'}</span><span>${unlocked ? b.name : '未解除'}</span>`;
+    chip.title = b.desc;
+    chip.innerHTML = `<span class="badge-icon">${unlocked ? b.icon : '🔒'}</span><span>${b.name}${unlocked ? '' : ' — ' + b.desc}</span>`;
     row.appendChild(chip);
   });
+  renderAchievementTree();
 }
 
 /* ── WEEK SUMMARY ── */
@@ -1186,7 +1389,7 @@ function load() {
   return {
     tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)), xp: 0,
     streakDates: [], ytFavorites: [], pomoToday: 0, pomoDate: null,
-    unlockedBadges: [], totalCompleted: 0, pomoTotal: 0, completionLog: []
+    unlockedBadges: [], totalCompleted: 0, pomoTotal: 0, completionLog: [], everUncompleted: false
   };
 }
 
@@ -1321,11 +1524,12 @@ function complete(id) {
   t.done = true;
   const xp = XP_BY_CAT[t.cat] || 20;
   state.xp += xp;
-  const today = dateStr(new Date());
+  const now = new Date();
+  const today = dateStr(now);
   if (!state.streakDates.includes(today)) state.streakDates.push(today);
   state.totalCompleted = (state.totalCompleted || 0) + 1;
   state.completionLog = state.completionLog || [];
-  state.completionLog.push({ date: today, xp, cat: t.cat });
+  state.completionLog.push({ date: today, xp, cat: t.cat, hour: now.getHours() });
   save();
   playBeep();
   showToast(`🎯 QUEST COMPLETE — +${xp} XP`);
@@ -1344,6 +1548,15 @@ function deleteTask(id, e) {
   render();
 }
 
+function clearAllTasks() {
+  if (state.tasks.length === 0) { showToast('// クエストはすでに空です'); return; }
+  if (!confirm('すべてのクエストを削除します。元に戻せません。よろしいですか？')) return;
+  state.tasks = [];
+  save();
+  render();
+  showToast('// ALL QUESTS CLEARED');
+}
+
 function uncomplete(id, e) {
   if (e) e.stopPropagation();
   const t = state.tasks.find(x=>x.id===id);
@@ -1351,8 +1564,10 @@ function uncomplete(id, e) {
   t.done = false;
   const xp = XP_BY_CAT[t.cat] || 20;
   state.xp = Math.max(0, state.xp - xp);
+  state.everUncompleted = true;
   save();
   showToast('// QUEST REVERTED');
+  checkBadges();
   render();
 }
 
@@ -1545,6 +1760,22 @@ function renderYtFavorites() {
 }
 
 /* ── PICTURE-IN-PICTURE ── */
+/* ── THEME ── */
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  const next = current === 'light' ? 'dark' : 'light';
+  if (next === 'light') html.setAttribute('data-theme', 'light');
+  else html.removeAttribute('data-theme');
+  try { localStorage.setItem('life-pmc-theme', next); } catch(e) {}
+  updateThemeBtnLabel(next);
+}
+
+function updateThemeBtnLabel(theme) {
+  const btn = document.getElementById('theme-btn');
+  if (btn) btn.textContent = theme === 'light' ? '🌙 ダーク' : '☀️ ライト';
+}
+
 async function togglePinp() {
   if (pipWindowRef) {
     pipWindowRef.close();
@@ -1642,6 +1873,7 @@ pomoUpdateDisplay();
 renderBadges();
 checkBadges();
 render();
+updateThemeBtnLabel(document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
 
 /* ── CLOUD SYNC (GitHub Gist) ── */
 const GITHUB_API = 'https://api.github.com';
@@ -1709,6 +1941,7 @@ async function cloudPull(token, gistId) {
     state.totalCompleted = state.totalCompleted || 0;
     state.pomoTotal = state.pomoTotal || 0;
     state.completionLog = state.completionLog || [];
+    state.everUncompleted = state.everUncompleted || false;
     localStorage.setItem('life-pmc', JSON.stringify(state));
     nextId = Math.max(...state.tasks.map(t=>t.id), 10) + 1;
     nextYtId = Math.max(...state.ytFavorites.map(f=>f.id), 0) + 1;
