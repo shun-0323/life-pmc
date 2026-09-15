@@ -571,7 +571,7 @@
 
   /* ── ADD FORM ── */
   .add-form {
-    margin-top: 1.75rem;
+    margin-bottom: 1.75rem;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -733,6 +733,72 @@
     border-radius: var(--radius);
   }
 
+  /* ── QUEST NOTE ── */
+  .quest-note-input {
+    width: 100%;
+    margin-top: 5px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed transparent;
+    color: var(--text-muted);
+    font-family: var(--font);
+    font-size: 11px;
+    padding: 2px 0;
+    outline: none;
+  }
+
+  .quest-note-input::placeholder { color: var(--text-dim); }
+
+  .quest-note-input:hover,
+  .quest-note-input:focus {
+    border-bottom-color: var(--border2);
+    color: var(--text);
+  }
+
+  .quest-note-static {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 5px;
+    font-style: italic;
+  }
+
+  /* ── ACHIEVEMENTS ── */
+  .badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+
+  .badge-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 20px;
+    font-size: 11px;
+    border: 1px dashed var(--border2);
+    color: var(--text-dim);
+    background: var(--surface);
+    white-space: nowrap;
+  }
+
+  .badge-chip.unlocked {
+    border: 1px solid var(--warn);
+    color: var(--warn);
+    background: var(--warn-dim);
+  }
+
+  .badge-icon { font-size: 12px; }
+
+  /* ── WEEK SUMMARY ── */
+  .week-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 1.5rem;
+  }
+
   /* ── SYNC ── */
   .sync-bar {
     display: flex;
@@ -846,6 +912,25 @@
 <body>
 
 <div class="app">
+  <div class="add-form">
+    <div class="add-form-label">// ADD QUEST</div>
+    <div class="add-row">
+      <input type="text" id="new-name" placeholder="タスク名を入力..." />
+      <select id="new-cat">
+        <option value="研究">研究</option>
+        <option value="映像">映像</option>
+        <option value="生活">生活</option>
+        <option value="その他">その他</option>
+      </select>
+      <input type="date" id="new-deadline" />
+    </div>
+    <div class="add-row" style="margin-top:8px;">
+      <input type="text" id="new-note" placeholder="メモ（任意）例: データはDesktop/researchフォルダ" />
+      <button class="add-btn" onclick="addTask()">+ ADD QUEST</button>
+    </div>
+    <div class="err" id="err">タスク名を入力してください</div>
+  </div>
+
   <div class="header">
     <div class="header-top">
       <div>
@@ -920,6 +1005,16 @@
     <button class="sync-btn ghost" id="sync-disconnect-btn" onclick="syncDisconnect()" style="display:none;">切断</button>
   </div>
 
+  <div class="section-label">// ACHIEVEMENTS</div>
+  <div class="badges-row" id="badges-row"></div>
+
+  <div class="section-label">// THIS WEEK (直近7日間)</div>
+  <div class="week-summary" id="week-summary">
+    <div class="stat"><div class="stat-n" id="w-count">0</div><div class="stat-l">Quests</div></div>
+    <div class="stat"><div class="stat-n" id="w-xp">0</div><div class="stat-l">XP</div></div>
+    <div class="stat"><div class="stat-n" id="w-cat">—</div><div class="stat-l">Top category</div></div>
+  </div>
+
   <div class="tabs">
     <button class="tab active" data-filter="all" onclick="setFilter('all',this)">ALL</button>
     <button class="tab" data-filter="active" onclick="setFilter('active',this)">ACTIVE</button>
@@ -932,22 +1027,6 @@
 
   <div class="section-label">// QUEST LOG</div>
   <div class="quest-list" id="quest-list"></div>
-
-  <div class="add-form">
-    <div class="add-form-label">// ADD QUEST</div>
-    <div class="add-row">
-      <input type="text" id="new-name" placeholder="タスク名を入力..." />
-      <select id="new-cat">
-        <option value="研究">研究</option>
-        <option value="映像">映像</option>
-        <option value="生活">生活</option>
-        <option value="その他">その他</option>
-      </select>
-      <input type="date" id="new-deadline" />
-      <button class="add-btn" onclick="addTask()">+ ADD QUEST</button>
-    </div>
-    <div class="err" id="err">タスク名を入力してください</div>
-  </div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -991,6 +1070,10 @@ const DEFAULT_TASKS = [
 let state = load();
 state.streakDates = state.streakDates || [];
 state.ytFavorites = state.ytFavorites || [];
+state.unlockedBadges = state.unlockedBadges || [];
+state.totalCompleted = state.totalCompleted || 0;
+state.pomoTotal = state.pomoTotal || 0;
+state.completionLog = state.completionLog || [];
 {
   const _today = dateStr(new Date());
   if (state.pomoDate !== _today) { state.pomoDate = _today; state.pomoToday = 0; }
@@ -1018,12 +1101,87 @@ function computeStreak() {
   return streak;
 }
 
+/* ── ACHIEVEMENTS ── */
+const BADGES = [
+  { id: 'first_quest',    icon: '🔰', name: '最初の一歩',     desc: 'クエストを1つ完了',        check: s => (s.totalCompleted||0) >= 1 },
+  { id: 'quests_10',      icon: '⚔️', name: '駆け出し',       desc: 'クエストを10個完了',       check: s => (s.totalCompleted||0) >= 10 },
+  { id: 'quests_50',      icon: '🛡️', name: '熟練',           desc: 'クエストを50個完了',       check: s => (s.totalCompleted||0) >= 50 },
+  { id: 'quests_100',     icon: '👑', name: 'ベテラン',       desc: 'クエストを100個完了',      check: s => (s.totalCompleted||0) >= 100 },
+  { id: 'streak_3',       icon: '🔥', name: '習慣化の兆し',   desc: '3日連続で達成',            check: s => computeStreak() >= 3 },
+  { id: 'streak_7',       icon: '🔥', name: '一週間継続',     desc: '7日連続で達成',            check: s => computeStreak() >= 7 },
+  { id: 'streak_30',      icon: '🔥', name: '継続は力',       desc: '30日連続で達成',           check: s => computeStreak() >= 30 },
+  { id: 'pomo_10',        icon: '🍅', name: '集中の達人',     desc: 'ポモドーロを10回完了',     check: s => (s.pomoTotal||0) >= 10 },
+  { id: 'all_categories', icon: '🎯', name: 'オールラウンダー', desc: '全カテゴリでクエストを完了', check: s => ['研究','映像','生活','その他'].every(c => s.tasks.some(t => t.done && t.cat === c)) },
+  { id: 'master_pmc',     icon: '🏆', name: 'MASTER PMC',     desc: 'MASTER PMCランクに到達',   check: s => getLevel(s.xp).name === 'MASTER PMC' },
+];
+
+function checkBadges() {
+  state.unlockedBadges = state.unlockedBadges || [];
+  let newlyUnlocked = [];
+  BADGES.forEach(b => {
+    if (!state.unlockedBadges.includes(b.id) && b.check(state)) {
+      state.unlockedBadges.push(b.id);
+      newlyUnlocked.push(b);
+    }
+  });
+  if (newlyUnlocked.length > 0) {
+    save();
+    newlyUnlocked.forEach((b, i) => {
+      setTimeout(() => showToast(`🏆 実績解除: ${b.name}`), 1400 + i * 1600);
+    });
+    renderBadges();
+  }
+}
+
+function renderBadges() {
+  const row = document.getElementById('badges-row');
+  if (!row) return;
+  row.innerHTML = '';
+  BADGES.forEach(b => {
+    const unlocked = (state.unlockedBadges || []).includes(b.id);
+    const chip = document.createElement('div');
+    chip.className = 'badge-chip' + (unlocked ? ' unlocked' : '');
+    chip.title = unlocked ? b.desc : '???';
+    chip.innerHTML = `<span class="badge-icon">${unlocked ? b.icon : '🔒'}</span><span>${unlocked ? b.name : '未解除'}</span>`;
+    row.appendChild(chip);
+  });
+}
+
+/* ── WEEK SUMMARY ── */
+function computeWeekSummary() {
+  const cursor = new Date();
+  cursor.setDate(cursor.getDate() - 6);
+  const cutoff = dateStr(cursor);
+  const entries = (state.completionLog || []).filter(e => e.date >= cutoff);
+  const count = entries.length;
+  const xp = entries.reduce((sum, e) => sum + e.xp, 0);
+  const byCat = {};
+  entries.forEach(e => { byCat[e.cat] = (byCat[e.cat] || 0) + 1; });
+  let topCat = '—', topCount = 0;
+  Object.entries(byCat).forEach(([c, n]) => { if (n > topCount) { topCat = c; topCount = n; } });
+  return { count, xp, topCat };
+}
+
+function renderWeekSummary() {
+  const w = computeWeekSummary();
+  const elCount = document.getElementById('w-count');
+  const elXp = document.getElementById('w-xp');
+  const elCat = document.getElementById('w-cat');
+  if (elCount) elCount.textContent = w.count;
+  if (elXp) elXp.textContent = w.xp;
+  if (elCat) elCat.textContent = w.topCat;
+}
+
 function load() {
   try {
     const s = localStorage.getItem('life-pmc');
     if (s) return JSON.parse(s);
   } catch(e) {}
-  return { tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)), xp: 0, streakDates: [], ytFavorites: [], pomoToday: 0, pomoDate: null };
+  return {
+    tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)), xp: 0,
+    streakDates: [], ytFavorites: [], pomoToday: 0, pomoDate: null,
+    unlockedBadges: [], totalCompleted: 0, pomoTotal: 0, completionLog: []
+  };
 }
 
 function save() {
@@ -1077,6 +1235,7 @@ function render() {
   document.getElementById('s-xp').textContent = state.xp;
   document.getElementById('s-streak').textContent = computeStreak();
   if (pipContainerRef) renderPipContent();
+  renderWeekSummary();
 
   let visible = state.tasks;
   if (filter === 'active') visible = visible.filter(t => !t.done);
@@ -1118,6 +1277,7 @@ function render() {
           <span class="cat-badge cat-${t.cat}">${t.cat}</span>
           ${deadlineHtml}
         </div>
+        <div class="quest-note-slot"></div>
       </div>
       <div class="quest-right">
         <span class="xp-reward">${t.done ? '✓' : '+'} ${xp} XP</span>
@@ -1126,6 +1286,22 @@ function render() {
           : `<button class="del-btn" onclick="uncomplete(${t.id},event)">UNDO</button>`}
       </div>
     `;
+    const noteSlot = div.querySelector('.quest-note-slot');
+    if (!t.done) {
+      const noteInput = document.createElement('input');
+      noteInput.type = 'text';
+      noteInput.className = 'quest-note-input';
+      noteInput.placeholder = 'メモを追加...';
+      noteInput.value = t.note || '';
+      noteInput.onclick = e => e.stopPropagation();
+      noteInput.onchange = () => {
+        t.note = noteInput.value.trim() || null;
+        save();
+      };
+      noteSlot.appendChild(noteInput);
+    } else if (t.note) {
+      noteSlot.innerHTML = `<div class="quest-note-static">${t.note}</div>`;
+    }
     if (!t.done) div.onclick = () => complete(t.id);
     else div.onclick = () => uncomplete(t.id);
     list.appendChild(div);
@@ -1141,6 +1317,9 @@ function complete(id) {
   state.xp += xp;
   const today = dateStr(new Date());
   if (!state.streakDates.includes(today)) state.streakDates.push(today);
+  state.totalCompleted = (state.totalCompleted || 0) + 1;
+  state.completionLog = state.completionLog || [];
+  state.completionLog.push({ date: today, xp, cat: t.cat });
   save();
   playBeep();
   showToast(`🎯 QUEST COMPLETE — +${xp} XP`);
@@ -1148,6 +1327,7 @@ function complete(id) {
   if (newLv.name !== prevLv) {
     setTimeout(() => showLevelup(newLv), 800);
   }
+  checkBadges();
   render();
 }
 
@@ -1174,12 +1354,14 @@ function addTask() {
   const name = document.getElementById('new-name').value.trim();
   const cat = document.getElementById('new-cat').value;
   const deadline = document.getElementById('new-deadline').value;
+  const note = document.getElementById('new-note').value.trim();
   const err = document.getElementById('err');
   if (!name) { err.style.display = 'block'; return; }
   err.style.display = 'none';
-  state.tasks.push({ id: nextId++, name, cat, done: false, deadline: deadline || null });
+  state.tasks.push({ id: nextId++, name, cat, done: false, deadline: deadline || null, note: note || null });
   document.getElementById('new-name').value = '';
   document.getElementById('new-deadline').value = '';
+  document.getElementById('new-note').value = '';
   save();
   render();
   showToast('// NEW QUEST ADDED');
@@ -1287,6 +1469,7 @@ function pomoComplete() {
   if (pomoMode === 'focus') {
     const prevLv = getLevel(state.xp).name;
     state.pomoToday = (state.pomoToday || 0) + 1;
+    state.pomoTotal = (state.pomoTotal || 0) + 1;
     state.xp += 15;
     save();
     document.getElementById('pomo-count-today').textContent = state.pomoToday;
@@ -1294,6 +1477,7 @@ function pomoComplete() {
     showToast('🍅 FOCUS COMPLETE — +15 XP');
     const newLv = getLevel(state.xp);
     if (newLv.name !== prevLv) setTimeout(() => showLevelup(newLv), 900);
+    checkBadges();
     render();
   } else {
     playBeep();
@@ -1442,10 +1626,15 @@ document.getElementById('yt-title').addEventListener('keydown', e => {
 document.getElementById('new-name').addEventListener('keydown', e => {
   if (e.key === 'Enter') addTask();
 });
+document.getElementById('new-note').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addTask();
+});
 
 renderYtFavorites();
 document.getElementById('pomo-count-today').textContent = state.pomoToday || 0;
 pomoUpdateDisplay();
+renderBadges();
+checkBadges();
 render();
 
 /* ── CLOUD SYNC (GitHub Gist) ── */
@@ -1510,6 +1699,10 @@ async function cloudPull(token, gistId) {
     state.streakDates = state.streakDates || [];
     state.ytFavorites = state.ytFavorites || [];
     state.tasks = state.tasks || [];
+    state.unlockedBadges = state.unlockedBadges || [];
+    state.totalCompleted = state.totalCompleted || 0;
+    state.pomoTotal = state.pomoTotal || 0;
+    state.completionLog = state.completionLog || [];
     localStorage.setItem('life-pmc', JSON.stringify(state));
     nextId = Math.max(...state.tasks.map(t=>t.id), 10) + 1;
     nextYtId = Math.max(...state.ytFavorites.map(f=>f.id), 0) + 1;
@@ -1543,6 +1736,8 @@ async function syncConnect() {
     renderSyncStatus(true);
     render();
     renderYtFavorites();
+    renderBadges();
+    checkBadges();
     document.getElementById('pomo-count-today').textContent = state.pomoToday || 0;
     input.value = '';
     showToast('🟢 SYNC CONNECTED');
@@ -1568,6 +1763,8 @@ async function initSync() {
     await cloudPull(token, gistId);
     render();
     renderYtFavorites();
+    renderBadges();
+    checkBadges();
     document.getElementById('pomo-count-today').textContent = state.pomoToday || 0;
   } catch (e) {
     showToast('// 同期の取得に失敗しました');
