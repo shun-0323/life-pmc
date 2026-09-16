@@ -221,6 +221,112 @@
     text-transform: uppercase;
   }
 
+  /* ── DEADLINE CALENDAR ── */
+  .calendar-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .calendar-month-label {
+    font-size: 13px;
+    color: var(--text);
+    letter-spacing: 0.05em;
+  }
+
+  .cal-nav-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 14px;
+    font-family: var(--font);
+    transition: all 0.15s;
+  }
+
+  .cal-nav-btn:hover { border-color: var(--accent); color: var(--accent-bright); }
+
+  .calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    background: var(--surface2);
+    position: relative;
+    gap: 2px;
+  }
+
+  .cal-day.empty { background: transparent; }
+
+  .cal-day.today {
+    border: 1.5px solid var(--xp-color);
+    color: var(--text);
+    font-weight: bold;
+  }
+
+  .cal-day.has-task { cursor: pointer; }
+  .cal-day.has-task:hover { background: var(--border); }
+
+  .cal-day-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .cal-day.overdue .cal-day-dot { background: var(--danger); }
+  .cal-day.urgent .cal-day-dot { background: var(--warn); }
+
+  .calendar-legend {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+
+  .cal-legend-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-right: 4px;
+  }
+
   /* ── TOOLS ── */
   .tools-grid {
     display: grid;
@@ -271,12 +377,50 @@
     background: var(--accent-dim);
   }
 
+  .pomo-status {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+  }
+
+  .pomo-status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .pomo-status.running {
+    color: var(--accent-bright);
+  }
+
+  .pomo-status.running .pomo-status-dot {
+    background: var(--accent-bright);
+    animation: pomo-pulse 1.3s ease-in-out infinite;
+  }
+
+  @keyframes pomo-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(94,196,127,0.55); }
+    50% { box-shadow: 0 0 0 6px rgba(94,196,127,0); }
+  }
+
+  #pomo-card.pomo-running {
+    border-color: var(--accent);
+    box-shadow: 0 0 14px rgba(74,158,106,0.25);
+  }
+
   .pomo-display {
     text-align: center;
     font-size: 42px;
     color: var(--xp-color);
     letter-spacing: 0.05em;
     margin: 6px 0 14px;
+    transition: color 0.3s;
   }
 
   .pomo-controls {
@@ -650,6 +794,16 @@
 
   .add-row input[type="date"] { min-width: 150px; }
 
+  .add-row input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+  }
+
+  .add-row input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    background: var(--surface2);
+  }
+
   .add-btn {
     height: 36px;
     padding: 0 16px;
@@ -885,6 +1039,116 @@
   .badge-icon { font-size: 12px; }
 
   /* ── WEEK SUMMARY ── */
+  /* ── SEASON RANK ── */
+  .season-card {
+    background: var(--surface);
+    border: 1px solid var(--warn);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .season-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .season-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  #season-days-left {
+    color: var(--text-muted);
+    letter-spacing: 0.03em;
+    text-transform: none;
+  }
+
+  .season-rank-name {
+    font-size: 20px;
+    color: var(--warn);
+    letter-spacing: 0.08em;
+    margin-top: 4px;
+  }
+
+  .season-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+
+  .season-bar-bg {
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .season-bar-fill {
+    height: 100%;
+    background: var(--warn);
+    border-radius: 4px;
+    transition: width 0.5s;
+    box-shadow: 0 0 6px rgba(196,154,42,0.4);
+  }
+
+  .season-xp-text {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* ── WEEK CHART ── */
+  .week-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 130px;
+    margin-bottom: 12px;
+    padding: 12px 8px 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .week-chart-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+    gap: 4px;
+  }
+
+  .week-chart-value {
+    font-size: 10px;
+    color: var(--text-muted);
+    min-height: 12px;
+  }
+
+  .week-chart-bar {
+    width: 55%;
+    background: var(--accent);
+    border-radius: 3px 3px 0 0;
+    min-height: 3px;
+    transition: height 0.4s;
+  }
+
+  .week-chart-bar.today {
+    background: var(--xp-color);
+    box-shadow: 0 0 5px rgba(122,184,245,0.5);
+  }
+
+  .week-chart-label {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-bottom: 2px;
+  }
+
   .week-summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1036,6 +1300,20 @@
     </div>
   </div>
 
+  <div class="season-card" id="season-card">
+    <div class="season-top">
+      <div>
+        <div class="season-label">// SEASON RANK <span id="season-days-left"></span></div>
+        <div class="season-rank-name" id="season-rank-name">UNRANKED</div>
+      </div>
+      <div class="season-icon" id="season-icon">⬜</div>
+    </div>
+    <div class="season-bar-bg">
+      <div class="season-bar-fill" id="season-bar-fill" style="width:0%"></div>
+    </div>
+    <div class="season-xp-text" id="season-xp-text">0 XP（今月）</div>
+  </div>
+
   <div class="add-form">
     <div class="add-form-label">// ADD QUEST</div>
     <div class="add-row">
@@ -1046,7 +1324,7 @@
         <option value="生活">生活</option>
         <option value="その他">その他</option>
       </select>
-      <input type="date" id="new-deadline" />
+      <input type="date" id="new-deadline" onclick="this.showPicker && this.showPicker()" />
     </div>
     <div class="add-row" style="margin-top:8px;">
       <input type="text" id="new-note" placeholder="メモ（任意）例: データはDesktop/researchフォルダ" />
@@ -1071,15 +1349,34 @@
   </div>
   <div class="quest-list" id="quest-list"></div>
 
+  <div class="section-label">// DEADLINE CALENDAR</div>
+  <div class="calendar-card">
+    <div class="calendar-header">
+      <button class="cal-nav-btn" onclick="calendarPrevMonth()">‹</button>
+      <div class="calendar-month-label" id="calendar-month-label">—</div>
+      <button class="cal-nav-btn" onclick="calendarNextMonth()">›</button>
+    </div>
+    <div class="calendar-weekdays">
+      <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+    </div>
+    <div class="calendar-grid" id="calendar-grid"></div>
+    <div class="calendar-legend">
+      <span><i class="cal-legend-dot" style="background:var(--accent);"></i>期限あり</span>
+      <span><i class="cal-legend-dot" style="background:var(--warn);"></i>3日以内</span>
+      <span><i class="cal-legend-dot" style="background:var(--danger);"></i>期限切れ</span>
+    </div>
+  </div>
+
   <div class="section-label">// TOOLS</div>
   <div class="tools-grid">
-    <div class="tool-card">
+    <div class="tool-card" id="pomo-card">
       <div class="tool-title">Pomodoro timer</div>
       <div class="pomo-modes">
         <button class="pomo-mode-btn active" id="pomo-mode-focus" onclick="pomoSetMode('focus')">FOCUS 25</button>
         <button class="pomo-mode-btn" id="pomo-mode-short" onclick="pomoSetMode('short')">BREAK 5</button>
         <button class="pomo-mode-btn" id="pomo-mode-long" onclick="pomoSetMode('long')">LONG 15</button>
       </div>
+      <div class="pomo-status" id="pomo-status"><span class="pomo-status-dot"></span>停止中</div>
       <div class="pomo-display" id="pomo-display">25:00</div>
       <div class="pomo-controls">
         <button class="pomo-btn primary" id="pomo-toggle" onclick="pomoToggle()">START</button>
@@ -1118,6 +1415,7 @@
   </div>
 
   <div class="section-label">// THIS WEEK (直近7日間)</div>
+  <div class="week-chart" id="week-chart"></div>
   <div class="week-summary" id="week-summary">
     <div class="stat"><div class="stat-n" id="w-count">0</div><div class="stat-l">Quests</div></div>
     <div class="stat"><div class="stat-n" id="w-xp">0</div><div class="stat-l">XP</div></div>
@@ -1163,6 +1461,8 @@ state.totalCompleted = state.totalCompleted || 0;
 state.pomoTotal = state.pomoTotal || 0;
 state.completionLog = state.completionLog || [];
 state.everUncompleted = state.everUncompleted || false;
+state.seasonXp = state.seasonXp || 0;
+state.seasonMonth = state.seasonMonth || null;
 {
   const _today = dateStr(new Date());
   if (state.pomoDate !== _today) { state.pomoDate = _today; state.pomoToday = 0; }
@@ -1373,6 +1673,44 @@ function computeWeekSummary() {
   return { count, xp, topCat };
 }
 
+function computeDailyBreakdown() {
+  const days = [];
+  const dayLabels = ['日','月','火','水','木','金','土'];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const ds = dateStr(d);
+    const entries = (state.completionLog || []).filter(e => e.date === ds);
+    days.push({
+      date: ds,
+      count: entries.length,
+      xp: entries.reduce((s, e) => s + e.xp, 0),
+      label: dayLabels[d.getDay()]
+    });
+  }
+  return days;
+}
+
+function renderWeekChart() {
+  const container = document.getElementById('week-chart');
+  if (!container) return;
+  const days = computeDailyBreakdown();
+  const max = Math.max(1, ...days.map(d => d.count));
+  const todayStr = dateStr(new Date());
+  container.innerHTML = '';
+  days.forEach(d => {
+    const col = document.createElement('div');
+    col.className = 'week-chart-col';
+    const barPct = Math.max(Math.round((d.count / max) * 100), d.count > 0 ? 6 : 2);
+    col.innerHTML = `
+      <div class="week-chart-value">${d.count > 0 ? d.count : ''}</div>
+      <div class="week-chart-bar${d.date === todayStr ? ' today' : ''}" style="height:${barPct}%"></div>
+      <div class="week-chart-label">${d.label}</div>
+    `;
+    container.appendChild(col);
+  });
+}
+
 function renderWeekSummary() {
   const w = computeWeekSummary();
   const elCount = document.getElementById('w-count');
@@ -1381,6 +1719,124 @@ function renderWeekSummary() {
   if (elCount) elCount.textContent = w.count;
   if (elXp) elXp.textContent = w.xp;
   if (elCat) elCat.textContent = w.topCat;
+  renderWeekChart();
+}
+
+/* ── SEASON RANK（月次リセット） ── */
+const RANKS = [
+  { min: 0,    max: 150,     name: 'UNRANKED', icon: '⬜' },
+  { min: 150,  max: 350,     name: 'BRONZE',   icon: '🥉' },
+  { min: 350,  max: 600,     name: 'SILVER',   icon: '🥈' },
+  { min: 600,  max: 900,     name: 'GOLD',     icon: '🥇' },
+  { min: 900,  max: 1300,    name: 'PLATINUM', icon: '💎' },
+  { min: 1300, max: 1800,    name: 'DIAMOND',  icon: '💠' },
+  { min: 1800, max: 999999,  name: 'MASTER',   icon: '👑' },
+];
+
+function getRank(xp) {
+  for (const r of RANKS) if (xp >= r.min && xp < r.max) return r;
+  return RANKS[RANKS.length - 1];
+}
+
+function currentMonthStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function daysLeftInMonth() {
+  const now = new Date();
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  return lastDay - now.getDate();
+}
+
+function checkSeasonReset() {
+  const cm = currentMonthStr();
+  if (state.seasonMonth !== cm) {
+    state.seasonMonth = cm;
+    state.seasonXp = 0;
+  }
+}
+
+function renderSeason() {
+  checkSeasonReset();
+  const xp = state.seasonXp || 0;
+  const rank = getRank(xp);
+  const pct = Math.min(100, Math.round(((xp - rank.min) / (rank.max - rank.min)) * 100));
+  const nameEl = document.getElementById('season-rank-name');
+  const iconEl = document.getElementById('season-icon');
+  const fillEl = document.getElementById('season-bar-fill');
+  const xpTextEl = document.getElementById('season-xp-text');
+  const daysEl = document.getElementById('season-days-left');
+  if (nameEl) nameEl.textContent = rank.name;
+  if (iconEl) iconEl.textContent = rank.icon;
+  if (fillEl) fillEl.style.width = pct + '%';
+  if (xpTextEl) {
+    xpTextEl.textContent = rank.max >= 999999
+      ? `${xp} XP（今月・最高ランク）`
+      : `${xp} / ${rank.max} XP（今月）`;
+  }
+  if (daysEl) daysEl.textContent = `残り${daysLeftInMonth()}日`;
+}
+
+/* ── DEADLINE CALENDAR ── */
+let calendarViewDate = new Date();
+
+function calendarPrevMonth() {
+  calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+  renderCalendar();
+}
+
+function calendarNextMonth() {
+  calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const label = document.getElementById('calendar-month-label');
+  const grid = document.getElementById('calendar-grid');
+  if (!label || !grid) return;
+
+  const year = calendarViewDate.getFullYear();
+  const month = calendarViewDate.getMonth();
+  label.textContent = `${year}年${month + 1}月`;
+
+  const tasksByDate = {};
+  state.tasks.forEach(t => {
+    if (!t.deadline || t.done) return;
+    if (!tasksByDate[t.deadline]) tasksByDate[t.deadline] = [];
+    tasksByDate[t.deadline].push(t.name);
+  });
+
+  const firstDay = new Date(year, month, 1);
+  const startWeekday = firstDay.getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = dateStr(new Date());
+
+  grid.innerHTML = '';
+  for (let i = 0; i < startWeekday; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'cal-day empty';
+    grid.appendChild(empty);
+  }
+  for (let day = 1; day <= daysInMonth; day++) {
+    const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const cell = document.createElement('div');
+    cell.className = 'cal-day';
+    if (ds === todayStr) cell.classList.add('today');
+
+    const names = tasksByDate[ds];
+    if (names) {
+      cell.classList.add('has-task');
+      const diffDays = Math.round((new Date(ds) - new Date(todayStr)) / 86400000);
+      if (diffDays < 0) cell.classList.add('overdue');
+      else if (diffDays <= 3) cell.classList.add('urgent');
+      cell.title = names.join('\n');
+      cell.onclick = () => showToast(`📅 ${month + 1}/${day} — ${names.join(' / ')}`);
+    }
+
+    cell.innerHTML = `<span>${day}</span>${names ? '<div class="cal-day-dot"></div>' : ''}`;
+    grid.appendChild(cell);
+  }
 }
 
 function load() {
@@ -1391,7 +1847,8 @@ function load() {
   return {
     tasks: JSON.parse(JSON.stringify(DEFAULT_TASKS)), xp: 0,
     streakDates: [], ytFavorites: [], pomoToday: 0, pomoDate: null,
-    unlockedBadges: [], totalCompleted: 0, pomoTotal: 0, completionLog: [], everUncompleted: false
+    unlockedBadges: [], totalCompleted: 0, pomoTotal: 0, completionLog: [], everUncompleted: false,
+    seasonXp: 0, seasonMonth: null
   };
 }
 
@@ -1447,6 +1904,8 @@ function render() {
   document.getElementById('s-streak').textContent = computeStreak();
   if (pipContainerRef) renderPipContent();
   renderWeekSummary();
+  renderSeason();
+  renderCalendar();
 
   let visible = state.tasks;
   if (filter === 'active') visible = visible.filter(t => !t.done);
@@ -1523,9 +1982,12 @@ function complete(id) {
   const t = state.tasks.find(x=>x.id===id);
   if (!t || t.done) return;
   const prevLv = getLevel(state.xp).name;
+  checkSeasonReset();
+  const prevRank = getRank(state.seasonXp || 0).name;
   t.done = true;
   const xp = XP_BY_CAT[t.cat] || 20;
   state.xp += xp;
+  state.seasonXp = (state.seasonXp || 0) + xp;
   const now = new Date();
   const today = dateStr(now);
   if (!state.streakDates.includes(today)) state.streakDates.push(today);
@@ -1538,6 +2000,10 @@ function complete(id) {
   const newLv = getLevel(state.xp);
   if (newLv.name !== prevLv) {
     setTimeout(() => showLevelup(newLv), 800);
+  }
+  const newRank = getRank(state.seasonXp || 0);
+  if (newRank.name !== prevRank) {
+    setTimeout(() => showToast(`${newRank.icon} SEASON RANK UP — ${newRank.name}`), newLv.name !== prevLv ? 2600 : 900);
   }
   checkBadges();
   render();
@@ -1566,6 +2032,7 @@ function uncomplete(id, e) {
   t.done = false;
   const xp = XP_BY_CAT[t.cat] || 20;
   state.xp = Math.max(0, state.xp - xp);
+  state.seasonXp = Math.max(0, (state.seasonXp || 0) - xp);
   state.everUncompleted = true;
   save();
   showToast('// QUEST REVERTED');
@@ -1639,6 +2106,7 @@ function playLevelup() {
 
 /* ── POMODORO ── */
 const POMO_DURATIONS = { focus: 25*60, short: 5*60, long: 15*60 };
+const DEFAULT_PAGE_TITLE = document.title;
 let pomoMode = 'focus';
 let pomoSeconds = POMO_DURATIONS.focus;
 let pomoTimer = null;
@@ -1647,7 +2115,20 @@ let pomoRunning = false;
 function pomoUpdateDisplay() {
   const m = Math.floor(pomoSeconds/60);
   const s = pomoSeconds%60;
-  document.getElementById('pomo-display').textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const text = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('pomo-display').textContent = text;
+  document.title = pomoRunning ? `⏱ ${text} — Life PMC` : DEFAULT_PAGE_TITLE;
+}
+
+function updatePomoStatusUI() {
+  const statusEl = document.getElementById('pomo-status');
+  const cardEl = document.getElementById('pomo-card');
+  if (statusEl) {
+    const label = pomoRunning ? (pomoMode === 'focus' ? '集中中' : '休憩中') : '停止中';
+    statusEl.innerHTML = `<span class="pomo-status-dot"></span>${label}`;
+    statusEl.classList.toggle('running', pomoRunning);
+  }
+  if (cardEl) cardEl.classList.toggle('pomo-running', pomoRunning);
 }
 
 function pomoSetMode(mode) {
@@ -1657,6 +2138,7 @@ function pomoSetMode(mode) {
   document.querySelectorAll('.pomo-mode-btn').forEach(b => b.classList.remove('active'));
   document.getElementById('pomo-mode-' + mode).classList.add('active');
   pomoUpdateDisplay();
+  updatePomoStatusUI();
 }
 
 function pomoToggle() {
@@ -1668,6 +2150,8 @@ function pomoStart() {
   if (pomoRunning) return;
   pomoRunning = true;
   document.getElementById('pomo-toggle').textContent = 'PAUSE';
+  updatePomoStatusUI();
+  pomoUpdateDisplay();
   pomoTimer = setInterval(() => {
     pomoSeconds--;
     pomoUpdateDisplay();
@@ -1679,6 +2163,8 @@ function pomoPause() {
   pomoRunning = false;
   clearInterval(pomoTimer);
   document.getElementById('pomo-toggle').textContent = 'START';
+  updatePomoStatusUI();
+  pomoUpdateDisplay();
 }
 
 function pomoReset() {
@@ -1694,6 +2180,8 @@ function pomoComplete() {
     state.pomoToday = (state.pomoToday || 0) + 1;
     state.pomoTotal = (state.pomoTotal || 0) + 1;
     state.xp += 15;
+    checkSeasonReset();
+    state.seasonXp = (state.seasonXp || 0) + 15;
     save();
     document.getElementById('pomo-count-today').textContent = state.pomoToday;
     playLevelup();
@@ -1872,6 +2360,7 @@ document.getElementById('new-note').addEventListener('keydown', e => {
 renderYtFavorites();
 document.getElementById('pomo-count-today').textContent = state.pomoToday || 0;
 pomoUpdateDisplay();
+updatePomoStatusUI();
 renderBadges();
 checkBadges();
 render();
@@ -1944,6 +2433,8 @@ async function cloudPull(token, gistId) {
     state.pomoTotal = state.pomoTotal || 0;
     state.completionLog = state.completionLog || [];
     state.everUncompleted = state.everUncompleted || false;
+    state.seasonXp = state.seasonXp || 0;
+    state.seasonMonth = state.seasonMonth || null;
     localStorage.setItem('life-pmc', JSON.stringify(state));
     nextId = Math.max(...state.tasks.map(t=>t.id), 10) + 1;
     nextYtId = Math.max(...state.ytFavorites.map(f=>f.id), 0) + 1;
